@@ -4,6 +4,7 @@
 #include <ctime>
 #include <sstream>
 #include <string>
+#include <iomanip>
 using namespace std;
 
 void create(){
@@ -60,10 +61,48 @@ void create(){
     }
 }
 
+void read(){
+     cout << "View sales.csv file\n";
+    ifstream file("sales.csv");
+
+    if (!file.is_open()) {
+        cout << "Unable to open file.\n";
+        return;
+    }
+
+    string line;
+    cout << "Sales record\n";
+    cout << left << setw(10) << "SalesID"
+         << setw(15) << "Date"
+         << setw(20) << "Item"
+         << setw(10) << "Quantity"
+         << setw(10) << "Price" << endl;
+    cout << string(65, '-') << endl; 
+
+    while (getline(file, line)) {
+        stringstream ss(line);
+        string salesID, date, item, quantity, price;
+
+        getline(ss, salesID, ',');
+        getline(ss, date, ',');
+        getline(ss, item, ',');
+        getline(ss, quantity, ',');
+        getline(ss, price, ',');
+
+        cout << left << setw(10) << salesID
+             << setw(15) << date
+             << setw(20) << item
+             << setw(10) << quantity
+             << setw(10) << price << endl;
+    }
+
+     file.close();
+
+}
 void crud(){
     cout<<"...";
     create();
-    // read();
+    read();
     // update();
     // delete();
 }
