@@ -6,6 +6,7 @@
 #include <string>
 #include <iomanip>
 #include <vector>
+#include <map>
 using namespace std;
 
 void create(){
@@ -96,9 +97,7 @@ void read(){
              << setw(10) << quantity
              << setw(10) << price << endl;
     }
-
      file.close();
-
 }
 bool search(const string& targetID) {
     ifstream file("sales.csv");
@@ -119,42 +118,36 @@ bool search(const string& targetID) {
     file.close();
     return false; 
 }
+
 void update(){
     char update;
     cout << "Do you want to update? (y/n): ";
     cin >> update;
     if (update != 'y') return;
-
     cout << "Enter Sales ID to update: ";
     string targetID;
     cin >> targetID;
-
     if (!search(targetID)) {
         cout << "Sales ID " << targetID << " not found.\n";
         return;
     }
-
     ifstream file("sales.csv");
     if (!file) {
         cout << "Cannot open sales.csv\n";
         return;
     }
-
     vector<string> lines;
     string line;
-
     while (getline(file, line)) {
         stringstream ss(line);
         string salesID;
         getline(ss, salesID, ',');
-
         if (salesID == targetID) {
             string date, item, quantity, price;
             getline(ss, date, ',');
             getline(ss, item, ',');
             getline(ss, quantity, ',');
             getline(ss, price, ',');
-
             cout << "\nSelect detail to update:\n";
             cout << "1. Item\n2. Quantity\n3. Price\n4. Date\n5. All details\n";
             int choice;
@@ -192,13 +185,11 @@ void update(){
                     cout << "Invalid choice. No update done.\n";
                     break;
             }
-
             line = salesID + "," + date + "," + item + "," + quantity + "," + price;
         }
         lines.push_back(line);
     }
     file.close();
-
     ofstream outFile("sales.csv");
     if (!outFile) {
         cout << "Error opening file for writing.\n";
@@ -208,7 +199,6 @@ void update(){
         outFile << l << "\n";
     }
     outFile.close();
-
     cout << "Record updated successfully.\n";
 }
 
@@ -217,25 +207,20 @@ void del(){
     char del;
     cin >> del;
     if (del != 'y') return;
-
     cout << "Enter Sales ID to delete: ";
     string targetID;
     cin >> targetID;
-
     if (!search(targetID)) {
         cout << "Sales ID " << targetID << " not found.\n";
         return;
     }
-
     ifstream file("sales.csv");
     if (!file) {
         cout << "Cannot open sales.csv\n";
         return;
     }
-
     vector<string> lines;
     string line;
-
     while (getline(file, line)) {
         stringstream ss(line);
         string salesID;
@@ -245,7 +230,6 @@ void del(){
         }
     }
     file.close();
-
     ofstream outFile("sales.csv");
     if (!outFile) {
         cout << "Error opening file for writing.\n";
@@ -255,7 +239,6 @@ void del(){
         outFile << l << "\n";
     }
     outFile.close();
-
     cout << "Record with Sales ID " << targetID << " deleted successfully.\n";
 }
 
@@ -265,49 +248,42 @@ void crud(){
     update();
     del();
 }
+
 void sorting(){
     ifstream file("sales.csv");
     if (!file) {
         cout << "Cannot open sales.csv\n";
         return;
     }
-
     vector<string> lines;
     vector<string> formattedDates;
     vector<string> fullRecords;
     string line;
-
     bool reachedEOF = false;
 
     while (getline(file, line)) {
         stringstream ss(line);
         string salesID, date, item, quantity, price;
-
         getline(ss, salesID, ',');
         getline(ss, date, ',');
         getline(ss, item, ',');
         getline(ss, quantity, ',');
         getline(ss, price, ',');
-
         int d, m, y;
         char slash;
         stringstream ds(date);
         ds >> d >> slash >> m >> slash >> y;
-
         stringstream formattedDate;
         formattedDate << setw(4) << setfill('0') << y << "-"
                       << setw(2) << setfill('0') << m << "-"
                       << setw(2) << setfill('0') << d;
-
         string newLine = salesID + "," + formattedDate.str() + "," + item + "," + quantity + "," + price;
         fullRecords.push_back(newLine);
         formattedDates.push_back(formattedDate.str());
     }
-
     if (file.eof()) {
         reachedEOF = true;
     }
-
     file.close();
     for (size_t i = 0; i < fullRecords.size(); ++i) {
         for (size_t j = i + 1; j < fullRecords.size(); ++j) {
@@ -317,20 +293,16 @@ void sorting(){
             }
         }
     }
-
     ofstream tempFile("temp.csv");
     if (!tempFile) {
         cout << "Error creating temp.csv\n";
         return;
     }
-
     for (const auto &record : fullRecords) {
         tempFile << record << "\n";
     }
     tempFile.close();
-
     cout << "Sorted data saved to temp.csv.\n";
-
     if (!reachedEOF) {
         cout << "Did not reach end of file. Sorting again\n";
         sorting(); 
@@ -338,6 +310,83 @@ void sorting(){
         cout << "Reached end of file. Returning to main program.\n";
     }
 }
+
+void report(){
+    ifstream file("temp.csv");
+    ofstream report("report.txt");
+    if (!file.is_open() || !report.is_open()) {
+        cout << "Error opening temp.csv or report.txt file.\n";
+        return;
+    }
+    string line;
+    string currentDate = "";
+    int subtotal = 0;
+    int grandTotal = 0;
+    bool isFirstLine = true;
+    string firstDate = "";
+    vector<string> lines;
+    while (getline(file, line)) {
+        lines.push_back(line);
+        stringstream ss(line);
+        string salesID, date;
+        getline(ss, salesID, ',');
+        getline(ss, date, ',');
+        if (isFirstLine) {
+            firstDate = date;
+            isFirstLine = false;
+        }
+    }
+    report << "\n\nc: " << firstDate << "\n\n";
+    report << "Sales Report : Stationary Items Sold\n\n";
+    report << string(99, '-') << "\n";
+    report << left << setw(20) << "Date"
+           << setw(15) << "SaleID"
+           << setw(20) << "ItemName"
+           << setw(12) << "Quantity"
+           << setw(12) << "Price"
+           << setw(15) << "SalesAmount" << "\n";
+    report << string(99, '-') << "\n";
+    for (const string& row : lines) {
+        stringstream ss(row);
+        string salesID, date, item, quantityStr, priceStr;
+        getline(ss, salesID, ',');
+        getline(ss, date, ',');
+        getline(ss, item, ',');
+        getline(ss, quantityStr, ',');
+        getline(ss, priceStr, ',');
+        int quantity = stoi(quantityStr);
+        int price = stoi(priceStr);
+        int salesAmount = quantity * price;
+
+        if (date != currentDate && !currentDate.empty()) {
+            report << string(99, '-') << "\n";
+            report << right << setw(80) << "Subtotal for " << currentDate << " is : " << subtotal << "\n";
+            report << string(99, '-') << "\n\n";
+            grandTotal += subtotal;
+            subtotal = 0;
+        }
+        report << left << setw(20) << date
+               << setw(15) << salesID
+               << setw(20) << item
+               << setw(12) << quantity
+               << setw(12) << price
+               << setw(15) << salesAmount << "\n";
+        subtotal += salesAmount;
+        currentDate = date;
+    }
+    if (!currentDate.empty()) {
+        report << string(99, '-') << "\n";
+        report << right << setw(80) << "Subtotal for " << currentDate << " is : " << subtotal << "\n";
+        report << string(99, '-') << "\n";
+        grandTotal += subtotal;
+    }
+    report << right << setw(80) << "Grand Total: " << grandTotal << "\n";
+    report << string(99, '-') << "\n";
+    file.close();
+    report.close();
+    cout << "Report generated successfully in report.txt\n";
+}
+
 int main(){
     cout<<"START\n";
     cout<<"Is sales.csv file exist? y/n\n";
@@ -362,5 +411,16 @@ int main(){
         cout<<"Create temp.csv file\n";
         ofstream file("temp.csv");
         sorting();
+    }
+    char rep;
+    cin>>rep;
+    if(rep=='y'){
+        cout<<"Store temp.csv file to report.txt\n";
+        report();
+    }
+    else{
+        cout<<"Create report.txt file\n";
+        ofstream file("report.txt");
+        report();
     }
 }
