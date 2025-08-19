@@ -100,27 +100,40 @@ void read(){
      file.close();
 
 }
-void search(){
-    cout<<"Search the sales ID is present or not?\n";
-    char id;
-    cin>>id;
-    if(id=='n'){
-        cout<<"Sales ID is not present the Sales.csv file\n";
+bool search(const string& targetID) {
+    ifstream file("sales.csv");
+    if (!file) {
+        cout << "Cannot open sales.csv\n";
+        return false;
     }
-    else{
-        cout<<"Sales ID:"<<id<<"\n";
+    string line;
+    while (getline(file, line)) {
+        stringstream ss(line);
+        string salesID;
+        getline(ss, salesID, ',');
+        if (salesID == targetID) {
+            file.close();
+            return true;  // found
+        }
     }
+    file.close();
+    return false; // not found
 }
 
 void update(){
     char update;
-    cout<<"Do you need to update?\n";
-    cin>>update;
-    if(update=='y'){
-    cout<<"View sales.csv file\n";
+    cout << "Do you want to update? (y/n): ";
+    cin >> update;
+    if (update != 'y') return;
+
     cout << "Enter Sales ID to update: ";
     string targetID;
     cin >> targetID;
+
+    if (!search(targetID)) {
+        cout << "Sales ID " << targetID << " not found.\n";
+        return;
+    }
 
     ifstream file("sales.csv");
     if (!file) {
@@ -130,7 +143,6 @@ void update(){
 
     vector<string> lines;
     string line;
-    bool found = false;
 
     while (getline(file, line)) {
         stringstream ss(line);
@@ -138,8 +150,6 @@ void update(){
         getline(ss, salesID, ',');
 
         if (salesID == targetID) {
-            found = true;
-
             string date, item, quantity, price;
             getline(ss, date, ',');
             getline(ss, item, ',');
@@ -150,8 +160,7 @@ void update(){
             cout << "1. Item\n2. Quantity\n3. Price\n4. Date\n5. All details\n";
             int choice;
             cin >> choice;
-
-            cin.ignore(); 
+            cin.ignore();
 
             switch (choice) {
                 case 1:
@@ -191,11 +200,6 @@ void update(){
     }
     file.close();
 
-    if (!found) {
-        cout << "Sales ID " << targetID << " not found.\n";
-        return;
-    }
-
     ofstream outFile("sales.csv");
     if (!outFile) {
         cout << "Error opening file for writing.\n";
@@ -208,13 +212,60 @@ void update(){
 
     cout << "Record updated successfully.\n";
 }
+
+void del(){
+    cout << "Do you want to delete a record? (y/n): ";
+    char del;
+    cin >> del;
+    if (del != 'y') return;
+
+    cout << "Enter Sales ID to delete: ";
+    string targetID;
+    cin >> targetID;
+
+    if (!search(targetID)) {
+        cout << "Sales ID " << targetID << " not found.\n";
+        return;
+    }
+
+    ifstream file("sales.csv");
+    if (!file) {
+        cout << "Cannot open sales.csv\n";
+        return;
+    }
+
+    vector<string> lines;
+    string line;
+
+    while (getline(file, line)) {
+        stringstream ss(line);
+        string salesID;
+        getline(ss, salesID, ',');
+        if (salesID != targetID) {
+            lines.push_back(line);
+        }
+    }
+    file.close();
+
+    ofstream outFile("sales.csv");
+    if (!outFile) {
+        cout << "Error opening file for writing.\n";
+        return;
+    }
+    for (const auto& l : lines) {
+        outFile << l << "\n";
+    }
+    outFile.close();
+
+    cout << "Record with Sales ID " << targetID << " deleted successfully.\n";
 }
+
 void crud(){
     cout<<"...";
     create();
     read();
     update();
-    // delete();
+    del();
 }
 
 int main(){
