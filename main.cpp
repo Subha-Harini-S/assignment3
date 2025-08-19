@@ -309,8 +309,6 @@ void sorting(){
     }
 
     file.close();
-
-    // Sort using bubble sort
     for (size_t i = 0; i < fullRecords.size(); ++i) {
         for (size_t j = i + 1; j < fullRecords.size(); ++j) {
             if (formattedDates[i] > formattedDates[j]) {
@@ -335,7 +333,7 @@ void sorting(){
 
     if (!reachedEOF) {
         cout << "Did not reach end of file. Sorting again\n";
-        sorting();  // Recursive call
+        sorting(); 
     } else {
         cout << "Reached end of file. Returning to main program.\n";
     }
