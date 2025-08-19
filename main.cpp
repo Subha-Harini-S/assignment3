@@ -113,13 +113,12 @@ bool search(const string& targetID) {
         getline(ss, salesID, ',');
         if (salesID == targetID) {
             file.close();
-            return true;  // found
+            return true;  
         }
     }
     file.close();
-    return false; // not found
+    return false; 
 }
-
 void update(){
     char update;
     cout << "Do you want to update? (y/n): ";
@@ -261,7 +260,6 @@ void del(){
 }
 
 void crud(){
-    cout<<"...";
     create();
     read();
     update();
