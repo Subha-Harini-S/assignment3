@@ -265,7 +265,81 @@ void crud(){
     update();
     del();
 }
+void sorting(){
+    ifstream file("sales.csv");
+    if (!file) {
+        cout << "Cannot open sales.csv\n";
+        return;
+    }
 
+    vector<string> lines;
+    vector<string> formattedDates;
+    vector<string> fullRecords;
+    string line;
+
+    bool reachedEOF = false;
+
+    while (getline(file, line)) {
+        stringstream ss(line);
+        string salesID, date, item, quantity, price;
+
+        getline(ss, salesID, ',');
+        getline(ss, date, ',');
+        getline(ss, item, ',');
+        getline(ss, quantity, ',');
+        getline(ss, price, ',');
+
+        int d, m, y;
+        char slash;
+        stringstream ds(date);
+        ds >> d >> slash >> m >> slash >> y;
+
+        stringstream formattedDate;
+        formattedDate << setw(4) << setfill('0') << y << "-"
+                      << setw(2) << setfill('0') << m << "-"
+                      << setw(2) << setfill('0') << d;
+
+        string newLine = salesID + "," + formattedDate.str() + "," + item + "," + quantity + "," + price;
+        fullRecords.push_back(newLine);
+        formattedDates.push_back(formattedDate.str());
+    }
+
+    if (file.eof()) {
+        reachedEOF = true;
+    }
+
+    file.close();
+
+    // Sort using bubble sort
+    for (size_t i = 0; i < fullRecords.size(); ++i) {
+        for (size_t j = i + 1; j < fullRecords.size(); ++j) {
+            if (formattedDates[i] > formattedDates[j]) {
+                swap(fullRecords[i], fullRecords[j]);
+                swap(formattedDates[i], formattedDates[j]);
+            }
+        }
+    }
+
+    ofstream tempFile("temp.csv");
+    if (!tempFile) {
+        cout << "Error creating temp.csv\n";
+        return;
+    }
+
+    for (const auto &record : fullRecords) {
+        tempFile << record << "\n";
+    }
+    tempFile.close();
+
+    cout << "Sorted data saved to temp.csv.\n";
+
+    if (!reachedEOF) {
+        cout << "Did not reach end of file. Sorting again\n";
+        sorting();  // Recursive call
+    } else {
+        cout << "Reached end of file. Returning to main program.\n";
+    }
+}
 int main(){
     cout<<"START\n";
     cout<<"Is sales.csv file exist? y/n\n";
@@ -284,10 +358,11 @@ int main(){
     cin>>ch;
     if(temp=='y'){
         cout<<"Perforn any of the Sorting operation\n";
-        // sorting();
+        sorting();
     }
     else{
         cout<<"Create temp.csv file\n";
         ofstream file("temp.csv");
+        sorting();
     }
 }
